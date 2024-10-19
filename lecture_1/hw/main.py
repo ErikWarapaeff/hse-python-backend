@@ -1,46 +1,83 @@
-from fastapi import FastAPI, HTTPException
-from typing import Optional
+import json
 import math
 
-app = FastAPI()
+async def app(scope, receive, send):
+    assert scope['type'] == 'http'
 
-# Factorial
-@app.get("/factorial")
-def get_factorial(n: Optional[int] = None):
-    if n is None or n < 0:
-        raise HTTPException(status_code=400, detail="Invalid input. Please provide a non-negative integer.")
-    try:
-        return {"n": n, "factorial": math.factorial(n)}
-    except OverflowError:
-        raise HTTPException(status_code=400, detail="Number too large to compute factorial.")
+    # Получаем данные о запросе
+    request_method = scope['method']
+    path = scope['path']
+    query_string = scope['query_string'].decode()
 
-# Fibonacci
-@app.get("/fibonacci")
-def get_fibonacci(n: Optional[int] = None):
-    if n is None or n < 0:
-        raise HTTPException(status_code=400, detail="Invalid input. Please provide a non-negative integer.")
+    # Парсим параметры запроса
+    params = dict(x.split('=') for x in query_string.split('&') if '=' in x)
+
+    # Факториал
+    if path == "/factorial" and request_method == "GET":
+        response = await handle_factorial(params)
+
+    # Числа Фибоначчи
+    elif path == "/fibonacci" and request_method == "GET":
+        response = await handle_fibonacci(params)
+
+    # Среднее значение
+    elif path == "/mean" and request_method == "GET":
+        response = await handle_mean(params)
+
+    # Если путь не найден
+    else:
+        response = {"status": 404, "message": "Not Found"}
     
-    def fibonacci(num):
-        a, b = 0, 1
-        result = []
-        for _ in range(num):
-            result.append(a)
-            a, b = b, a + b
-        return result
+    # Формируем HTTP ответ
+    await send({
+        'type': 'http.response.start',
+        'status': response.get("status", 200),
+        'headers': [
+            (b'content-type', b'application/json'),
+        ]
+    })
 
-    return {"n": n, "fibonacci": fibonacci(n)}
+    await send({
+        'type': 'http.response.body',
+        'body': json.dumps(response).encode(),
+    })
 
-# Mean
-@app.get("/mean")
-def get_mean(numbers: Optional[str] = None):
-    if not numbers:
-        raise HTTPException(status_code=400, detail="Please provide a comma-separated list of numbers.")
+# Обработчики для каждой функции
+
+async def handle_factorial(params):
+    n = params.get('n')
+    if n is None or not n.isdigit() or int(n) < 0:
+        return {"status": 400, "message": "Invalid input. Please provide a non-negative integer."}
+    
+    n = int(n)
+    try:
+        result = math.factorial(n)
+        return {"status": 200, "n": n, "factorial": result}
+    except OverflowError:
+        return {"status": 400, "message": "Number too large to compute factorial."}
+
+async def handle_fibonacci(params):
+    n = params.get('n')
+    if n is None or not n.isdigit() or int(n) < 0:
+        return {"status": 400, "message": "Invalid input. Please provide a non-negative integer."}
+    
+    n = int(n)
+    fib_seq = [0, 1]
+    while len(fib_seq) < n:
+        fib_seq.append(fib_seq[-1] + fib_seq[-2])
+
+    return {"status": 200, "n": n, "fibonacci": fib_seq[:n]}
+
+async def handle_mean(params):
+    numbers = params.get('numbers')
+    if numbers is None:
+        return {"status": 400, "message": "Please provide a comma-separated list of numbers."}
     
     try:
         num_list = [float(n) for n in numbers.split(",")]
         if not num_list:
-            raise HTTPException(status_code=400, detail="The list of numbers is empty.")
+            return {"status": 400, "message": "The list of numbers is empty."}
         mean_value = sum(num_list) / len(num_list)
-        return {"numbers": num_list, "mean": mean_value}
+        return {"status": 200, "numbers": num_list, "mean": mean_value}
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid input. Ensure all values are numbers.")
+        return {"status": 400, "message": "Invalid input. Ensure all values are numbers."}
