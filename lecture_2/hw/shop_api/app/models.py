@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
-from lecture_2.hw.shop_api.app.storages.item_storage import Item
-from lecture_2.hw.shop_api.app.storages.cart_storage import Cart, CartItem
+from .storages.item_storage import Item
+from .storages.cart_storage import Cart, CartItem
 
 
 class ItemResponse(BaseModel):
