@@ -8,6 +8,10 @@ from typing import List, Optional
 from lecture_2.hw.shop_api.app.models import ItemResponse, ItemRequest, ItemUpdateRequest
 from lecture_2.hw.shop_api.app.storages import items_storage
 
+
+# from app.models import ItemResponse, ItemRequest, ItemUpdateRequest
+# from app.storages import items_storage
+
 router = APIRouter(prefix="/item")
 
 # Добавление ограничения на положительное значение цены

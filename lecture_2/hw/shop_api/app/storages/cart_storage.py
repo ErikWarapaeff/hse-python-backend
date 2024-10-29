@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Optional
 from itertools import islice
 from lecture_2.hw.shop_api.app.storages.item_storage import Item
+# from .item_storage import Item
+
 
 @dataclass
 class CartItem:
@@ -10,7 +12,7 @@ class CartItem:
     quantity: int
     available: bool
     is_in_stock: bool  
-    price: float  
+    price: float  # Changed to float for consistency with Cart.price
 
 @dataclass
 class Cart:
@@ -20,7 +22,7 @@ class Cart:
 
     @property
     def total_cost(self) -> float:
-        return sum(item.quantity * item.price for item in self.items.values())  
+        return sum(item.quantity * item.price for item in self.items.values())  # Calculate total cost
 
 class CartStorage:
     def __init__(self):
@@ -47,7 +49,7 @@ class CartStorage:
                 quantity=1,
                 available=not item.deleted,
                 is_in_stock=not item.deleted,  
-                price=item.price  
+                price=item.price  # Pass the price
             )
         cart.price += item.price
         return cart.items[item.id]
@@ -79,3 +81,4 @@ class CartStorage:
         return list(filtered_carts)
 
 carts_storage = CartStorage()
+

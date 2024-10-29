@@ -6,6 +6,9 @@ from fastapi.responses import JSONResponse
 from lecture_2.hw.shop_api.app.models import Cart, CartResponse, Item
 from lecture_2.hw.shop_api.app.storages import carts_storage, items_storage
 
+# from app.models import Cart, CartResponse, Item
+# from app.storages import carts_storage, items_storage
+
 router = APIRouter(prefix="/cart")
 
 # Ограничения на положительное значение для цен
@@ -67,3 +70,7 @@ async def add_item_to_cart(cart_id: int, item_id: int):
 
     carts_storage.add_item_to_cart(cart_id, item)
     return Response(status_code=HTTPStatus.OK)
+
+
+
+
